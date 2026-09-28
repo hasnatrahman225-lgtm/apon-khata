@@ -1,0 +1,14 @@
+node_modules/
+*/node_modules/
+data/
+*.sqlite*
+.env
+.env.*
+dist/
+frontend/dist/
+.expo/
+.eas/
+*.log
+cloudflared.exe
+tools/
+*.zip
