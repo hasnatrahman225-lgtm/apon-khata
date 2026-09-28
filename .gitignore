@@ -1,7 +1,7 @@
 node_modules/
 */node_modules/
-data/
-*.sqlite*
+*.sqlite-wal
+*.sqlite-shm
 .env
 .env.*
 dist/
