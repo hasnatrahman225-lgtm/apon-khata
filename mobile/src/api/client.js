@@ -42,8 +42,8 @@ const storage = {
   }
 };
 
-// Current local Wi-Fi IP for phone / Expo Go
-export const DEFAULT_API_URL = 'http://192.168.25.27:4000';
+// Live Production Cloud API URL
+export const DEFAULT_API_URL = 'https://enthusiastic-love-production.up.railway.app';
 
 const API_STORAGE_KEY = '@khata_api_base_url';
 const TOKEN_STORAGE_KEY = '@khata_auth_token';
