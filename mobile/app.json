@@ -30,6 +30,9 @@
         "projectId": "b599e646-7900-45ab-ba95-2cdc56eb46a6"
       }
     },
-    "owner": "hasnat.rahman225"
+    "owner": "hasnat.rahman225",
+    "plugins": [
+      "expo-sharing"
+    ]
   }
 }
