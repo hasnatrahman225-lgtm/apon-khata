@@ -14,8 +14,9 @@ import {
 } from 'react-native';
 import { THEME } from '../constants/theme';
 import { TRANSLATIONS } from '../constants/translations';
-import { apiRequest, getBaseUrl, getAuthToken } from '../api/client';
+import { apiRequest, getBaseUrl, getAuthToken, getAuthUser } from '../api/client';
 import { formatTk } from '../utils/formatters';
+import { generateAndSharePdf } from '../utils/pdfGenerator';
 
 export default function ReportsScreen({ lang = 'bn' }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
@@ -129,26 +130,21 @@ export default function ReportsScreen({ lang = 'bn' }) {
 
   const handleDownload = async (type = 'pdf') => {
     try {
-      const baseUrl = await getBaseUrl();
-      const token = await getAuthToken();
+      const user = await getAuthUser();
+      const selectedContact = safeContacts.find((c) => String(c.id) === String(selectedContactId));
       const { from, to } = getDateRange();
-      const params = new URLSearchParams();
-      if (token) params.append('token', token);
-      if (selectedContactId) params.append('contactId', selectedContactId);
-      if (from) params.append('from', from);
-      if (to) params.append('to', to);
+      const dateRangeStr = from && to ? `${from} হতে ${to}` : 'সকল সময়';
 
-      const endpoint = type === 'csv' ? '/reports/csv' : '/reports/statement';
-      const fullUrl = `${baseUrl}${endpoint}?${params.toString()}`;
-
-      const supported = await Linking.canOpenURL(fullUrl).catch(() => true);
-      if (supported) {
-        await Linking.openURL(fullUrl);
-      } else {
-        Alert.alert('ত্রুটি', 'ডাউনলোড লিংকটি খোলা যাচ্ছে না');
-      }
+      await generateAndSharePdf({
+        title: selectedContact ? `${selectedContact.name} — হিসাব স্টেটমেন্ট` : 'সার্বিক হিসাব রিপোর্ট',
+        contact: selectedContact || null,
+        transactions: safeTransactions,
+        merchantName: user ? (user.name || user.email) : '',
+        businessName: user ? (user.business_name || '') : '',
+        dateRangeStr,
+      });
     } catch (e) {
-      Alert.alert('ত্রুটি', e.message);
+      Alert.alert('ত্রুটি', e.message || 'PDF তৈরি করা যায়নি');
     }
   };
 

@@ -17,8 +17,9 @@ import {
 } from 'react-native';
 import { THEME } from '../constants/theme';
 import { TRANSLATIONS } from '../constants/translations';
-import { apiRequest, getBaseUrl, getAuthToken } from '../api/client';
+import { apiRequest, getBaseUrl, getAuthToken, getAuthUser } from '../api/client';
 import { formatTk, formatDate } from '../utils/formatters';
+import { generateAndSharePdf } from '../utils/pdfGenerator';
 
 export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
@@ -146,23 +147,23 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
   const isReceivable = bal > 0;
   const isPayable = bal < 0;
 
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+
   const handleDownloadReport = async () => {
     try {
-      const baseUrl = await getBaseUrl();
-      const token = await getAuthToken();
-      const params = new URLSearchParams();
-      if (token) params.append('token', token);
-      params.append('contactId', contact.id);
-
-      const url = `${baseUrl}/reports/statement?${params.toString()}`;
-      const supported = await Linking.canOpenURL(url).catch(() => true);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        Alert.alert('ত্রুটি', 'ডাউনলোড লিংকটি খোলা যাচ্ছে না');
-      }
+      setGeneratingPdf(true);
+      const user = await getAuthUser();
+      await generateAndSharePdf({
+        title: `${contactData.name || contact.name} — হিসাব স্টেটমেন্ট`,
+        contact: contactData,
+        transactions,
+        merchantName: user ? (user.name || user.email) : '',
+        businessName: user ? (user.business_name || '') : '',
+      });
     } catch (e) {
-      Alert.alert('ত্রুটি', e.message);
+      Alert.alert('ত্রুটি', e.message || 'PDF তৈরি করা যায়নি');
+    } finally {
+      setGeneratingPdf(false);
     }
   };
 
