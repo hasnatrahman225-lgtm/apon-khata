@@ -19,9 +19,9 @@ export default function AuthScreen({ onLoginSuccess, lang = 'bn' }) {
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
 
   const [mode, setMode] = useState('login'); // 'login' | 'signup' | 'reset' | 'server'
-  const [email, setEmail] = useState('demo@example.com');
-  const [password, setPassword] = useState('123456');
-  const [confirmPassword, setConfirmPassword] = useState('123456');
+  const [email, setEmail] = useState('hasnat.rahman225@gmail.com');
+  const [password, setPassword] = useState('036928');
+  const [confirmPassword, setConfirmPassword] = useState('036928');
   const [name, setName] = useState('মো. মতিউর রহমান');
   const [businessName, setBusinessName] = useState('মেসার্স ট্রেডার্স');
   const [serverUrl, setServerUrl] = useState('');
@@ -292,13 +292,10 @@ export default function AuthScreen({ onLoginSuccess, lang = 'bn' }) {
           )}
         </View>
 
-        {/* Server Config link at footer */}
-        <TouchableOpacity
-          style={styles.serverFooter}
-          onPress={() => { setMode('server'); setError(''); }}
-        >
-          <Text style={styles.serverFooterText}>⚙️ সার্ভার আইপি পরিবর্তন ({serverUrl})</Text>
-        </TouchableOpacity>
+        {/* Cloud Status at footer */}
+        <View style={styles.serverFooter}>
+          <Text style={styles.serverFooterText}>☁️ ক্লাউড সার্ভার: Google Firebase Cloud (২৪/৭ অনলাইন)</Text>
+        </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );

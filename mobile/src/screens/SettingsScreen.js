@@ -148,21 +148,14 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
         </TouchableOpacity>
       </View>
 
-      {/* Server IP Config */}
+      {/* Cloud Server Info */}
       <View style={styles.card}>
-        <Text style={styles.cardHeader}>⚙️ {t.server_config}</Text>
-        <Text style={styles.helperText}>{t.server_help}</Text>
-        <TextInput
-          style={[styles.input, { marginTop: 8 }]}
-          value={serverUrl}
-          onChangeText={setServerUrl}
-          placeholder="http://192.168.25.27:4000"
-          placeholderTextColor={THEME.colors.textDim}
-          autoCapitalize="none"
-        />
-        <TouchableOpacity style={styles.btnSecondary} onPress={handleSaveServer}>
-          <Text style={styles.btnSecondaryText}>{t.save_server}</Text>
-        </TouchableOpacity>
+        <Text style={styles.cardHeader}>☁️ ক্লাউড ডাটাবেস স্ট্যাটাস</Text>
+        <Text style={styles.helperText}>আপনার অ্যাপটি সরাসরি Google Firebase Cloud ডাটাবেসের সাথে যুক্ত। কোনো ব্যক্তিগত কম্পিউটার চালু রাখা ছাড়াই সার্বক্ষণিক ২৪/৭ নিরাপদে সিঙ্ক থাকবে।</Text>
+        <View style={{ marginTop: 10, padding: 12, backgroundColor: '#132f22', borderRadius: 8, borderWidth: 1, borderColor: '#059669' }}>
+          <Text style={{ color: '#34d399', fontWeight: 'bold' }}>🟢 স্ট্যাটাস: সক্রিয় (Google Firebase)</Text>
+          <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 4 }}>প্রজেক্ট: apan-khata</Text>
+        </View>
       </View>
 
       {/* Logout */}
