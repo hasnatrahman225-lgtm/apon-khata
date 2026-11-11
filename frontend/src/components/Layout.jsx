@@ -2,12 +2,14 @@ import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 import LanguageModal from "./LanguageModal";
 import ChangePasswordModal from "./ChangePasswordModal";
 
 export default function Layout({ children }) {
   const { user, logout } = useAuth();
   const { t, currentLang, setCurrentLang, availableLanguages } = useLanguage();
+  const { theme, toggleTheme, isDark } = useTheme();
   const [showLangModal, setShowLangModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
 
@@ -27,6 +29,16 @@ export default function Layout({ children }) {
             </div>
             
             <div className="header-actions">
+              <button
+                type="button"
+                className="btn-icon"
+                onClick={toggleTheme}
+                title={isDark ? "লাইট মোড (দিন)" : "ডার্ক মোড (রাত)"}
+                style={{ fontSize: "1.1rem" }}
+              >
+                {isDark ? "☀️" : "🌙"}
+              </button>
+
               <div className="lang-dropdown-wrapper">
                 <select
                   className="lang-select"

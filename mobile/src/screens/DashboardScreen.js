@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,12 +8,14 @@ import {
   RefreshControl,
   ActivityIndicator
 } from 'react-native';
-import { THEME } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { TRANSLATIONS } from '../constants/translations';
 import { apiRequest } from '../api/client';
 import { formatTk, formatDate } from '../utils/formatters';
 
 export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => getStyles(theme, isDark), [theme, isDark]);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
 
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
   if (loading && !refreshing) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={THEME.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <Text style={styles.loadingText}>ড্যাশবোর্ড লোড হচ্ছে...</Text>
       </View>
     );
@@ -70,7 +72,7 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={THEME.colors.primary} />}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />}
     >
       {error ? (
         <View style={styles.errorBox}>
@@ -86,11 +88,11 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
         <View style={[styles.kpiCard, styles.kpiCardReceivable]}>
           <View style={styles.kpiHeader}>
             <Text style={styles.kpiTitle}>{t.receivable_label}</Text>
-            <View style={[styles.badge, { backgroundColor: 'rgba(16, 185, 129, 0.2)' }]}>
-              <Text style={[styles.badgeText, { color: THEME.colors.primary }]}>পাওনা</Text>
+            <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(16, 185, 129, 0.2)' : 'rgba(5, 150, 105, 0.15)' }]}>
+              <Text style={[styles.badgeText, { color: theme.colors.primary }]}>পাওনা</Text>
             </View>
           </View>
-          <Text style={[styles.kpiValue, { color: THEME.colors.primary }]}>
+          <Text style={[styles.kpiValue, { color: theme.colors.primary }]}>
             {formatTk(summary.total_receivable)}
           </Text>
           <Text style={styles.kpiSub}>{summary.customer_count || 0} জন কাস্টমার বাকি</Text>
@@ -99,11 +101,11 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
         <View style={[styles.kpiCard, styles.kpiCardPayable]}>
           <View style={styles.kpiHeader}>
             <Text style={styles.kpiTitle}>{t.payable_label}</Text>
-            <View style={[styles.badge, { backgroundColor: 'rgba(244, 63, 94, 0.2)' }]}>
-              <Text style={[styles.badgeText, { color: THEME.colors.danger }]}>দেনা</Text>
+            <View style={[styles.badge, { backgroundColor: isDark ? 'rgba(244, 63, 94, 0.2)' : 'rgba(225, 29, 72, 0.15)' }]}>
+              <Text style={[styles.badgeText, { color: theme.colors.danger }]}>দেনা</Text>
             </View>
           </View>
-          <Text style={[styles.kpiValue, { color: THEME.colors.danger }]}>
+          <Text style={[styles.kpiValue, { color: theme.colors.danger }]}>
             {formatTk(summary.total_payable)}
           </Text>
           <Text style={styles.kpiSub}>{summary.supplier_count || 0} জন সাপ্লায়ার দেনা</Text>
@@ -114,13 +116,13 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
       <View style={styles.flowRow}>
         <View style={styles.flowCard}>
           <Text style={styles.flowLabel}>{t.total_gave}</Text>
-          <Text style={[styles.flowValue, { color: THEME.colors.danger }]}>
+          <Text style={[styles.flowValue, { color: theme.colors.danger }]}>
             {formatTk(summary.total_gave)}
           </Text>
         </View>
         <View style={styles.flowCard}>
           <Text style={styles.flowLabel}>{t.total_got}</Text>
-          <Text style={[styles.flowValue, { color: THEME.colors.primary }]}>
+          <Text style={[styles.flowValue, { color: theme.colors.primary }]}>
             {formatTk(summary.total_got)}
           </Text>
         </View>
@@ -129,16 +131,16 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
       {/* Quick Actions */}
       <View style={styles.actionRow}>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: THEME.colors.primary }]}
+          style={[styles.actionBtn, { backgroundColor: theme.colors.primary }]}
           onPress={() => onNavigate('customers')}
         >
           <Text style={styles.actionBtnText}>👥 {t.nav_customers} ({summary.customer_count || 0})</Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: THEME.colors.surfaceLight }]}
+          style={[styles.actionBtn, { backgroundColor: theme.colors.surfaceLight, borderColor: theme.colors.surfaceBorder, borderWidth: 1 }]}
           onPress={() => onNavigate('suppliers')}
         >
-          <Text style={[styles.actionBtnText, { color: THEME.colors.text }]}>
+          <Text style={[styles.actionBtnText, { color: theme.colors.text }]}>
             🏭 {t.nav_suppliers} ({summary.supplier_count || 0})
           </Text>
         </TouchableOpacity>
@@ -171,7 +173,7 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
                   <Text
                     style={[
                       styles.txAmount,
-                      { color: isGave ? THEME.colors.danger : THEME.colors.primary },
+                      { color: isGave ? theme.colors.danger : theme.colors.primary },
                     ]}
                   >
                     {isGave ? '-' : '+'} {formatTk(tx.amount)}
@@ -189,49 +191,49 @@ export default function DashboardScreen({ onNavigate, lang = 'bn' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme, isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   content: {
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     paddingBottom: 40,
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,
   },
   loadingText: {
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginTop: 10,
     fontSize: 14,
   },
   errorBox: {
-    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    backgroundColor: isDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(225, 29, 72, 0.1)',
     borderWidth: 1,
-    borderColor: THEME.colors.danger,
-    borderRadius: THEME.radius.md,
+    borderColor: theme.colors.danger,
+    borderRadius: theme.radius.md,
     padding: 12,
     marginBottom: 12,
   },
   errorText: {
-    color: THEME.colors.danger,
+    color: theme.colors.danger,
     fontSize: 13,
   },
   retryBtn: {
     marginTop: 8,
     alignSelf: 'flex-start',
-    backgroundColor: THEME.colors.surfaceLight,
+    backgroundColor: theme.colors.surfaceLight,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 4,
   },
   retryBtnText: {
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 12,
   },
   kpiRow: {
@@ -241,19 +243,19 @@ const styles = StyleSheet.create({
   },
   kpiCard: {
     flex: 1,
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.lg,
+    borderRadius: theme.radius.lg,
     padding: 14,
   },
   kpiCardReceivable: {
     borderLeftWidth: 4,
-    borderLeftColor: THEME.colors.primary,
+    borderLeftColor: theme.colors.primary,
   },
   kpiCardPayable: {
     borderLeftWidth: 4,
-    borderLeftColor: THEME.colors.danger,
+    borderLeftColor: theme.colors.danger,
   },
   kpiHeader: {
     flexDirection: 'row',
@@ -264,7 +266,7 @@ const styles = StyleSheet.create({
   kpiTitle: {
     fontSize: 12,
     fontWeight: '600',
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
   },
   badge: {
     paddingHorizontal: 6,
@@ -282,7 +284,7 @@ const styles = StyleSheet.create({
   },
   kpiSub: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
   },
   flowRow: {
     flexDirection: 'row',
@@ -291,16 +293,16 @@ const styles = StyleSheet.create({
   },
   flowCard: {
     flex: 1,
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
-    borderRadius: THEME.radius.md,
+    borderColor: theme.colors.surfaceBorder,
+    borderRadius: theme.radius.md,
     padding: 10,
     alignItems: 'center',
   },
   flowLabel: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginBottom: 2,
   },
   flowValue: {
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
   actionBtn: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -325,10 +327,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   sectionCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.lg,
+    borderRadius: theme.radius.lg,
     padding: 14,
   },
   sectionHeader: {
@@ -337,21 +339,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceLight,
+    borderBottomColor: theme.colors.surfaceBorder,
     paddingBottom: 8,
   },
   sectionTitle: {
     fontSize: 15,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   seeAllText: {
     fontSize: 12,
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
     fontWeight: '600',
   },
   emptyText: {
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontSize: 13,
     textAlign: 'center',
     paddingVertical: 16,
@@ -362,7 +364,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceLight,
+    borderBottomColor: theme.colors.surfaceBorder,
   },
   txLeft: {
     flex: 1,
@@ -371,16 +373,16 @@ const styles = StyleSheet.create({
   txContact: {
     fontSize: 14,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   txMeta: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginTop: 2,
   },
   txNote: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     fontStyle: 'italic',
     marginTop: 2,
   },
@@ -393,7 +395,7 @@ const styles = StyleSheet.create({
   },
   txDirLabel: {
     fontSize: 10,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginTop: 2,
   },
 });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,7 +8,7 @@ import {
   ActivityIndicator
 } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
-import { THEME } from './src/constants/theme';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { TRANSLATIONS } from './src/constants/translations';
 import { getAuthUser, getAuthToken, clearAuthSession } from './src/api/client';
 import ErrorBoundary from './src/components/ErrorBoundary';
@@ -23,6 +23,9 @@ import ReportsScreen from './src/screens/ReportsScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 
 function MainApp() {
+  const { theme, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
+
   const [user, setUser] = useState(null);
   const [initialLoading, setInitialLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState('dashboard'); // 'dashboard' | 'customers' | 'suppliers' | 'stock' | 'reports' | 'settings'
@@ -59,11 +62,11 @@ function MainApp() {
   if (initialLoading) {
     return (
       <View style={styles.splash}>
-        <StatusBar barStyle="light-content" backgroundColor={THEME.colors.bg} />
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={theme.colors.bg} />
         <View style={styles.logoBadge}>
           <Text style={styles.logoBadgeText}>খাতা</Text>
         </View>
-        <ActivityIndicator size="large" color={THEME.colors.primary} style={{ marginTop: 20 }} />
+        <ActivityIndicator size="large" color={theme.colors.primary} style={{ marginTop: 20 }} />
       </View>
     );
   }
@@ -72,7 +75,7 @@ function MainApp() {
   if (!user) {
     return (
       <SafeAreaView style={styles.safeArea}>
-        <StatusBar barStyle="light-content" backgroundColor={THEME.colors.bg} />
+        <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={theme.colors.bg} />
         <AuthScreen
           onLoginSuccess={(loggedUser) => setUser(loggedUser)}
           lang={lang}
@@ -140,7 +143,7 @@ function MainApp() {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      <StatusBar barStyle="light-content" backgroundColor={THEME.colors.surface} />
+      <StatusBar barStyle={isDark ? "light-content" : "dark-content"} backgroundColor={theme.colors.surface} />
 
       {/* Top App Header (visible when not in contact detail) */}
       {!activeContact && (
@@ -154,12 +157,21 @@ function MainApp() {
               <Text style={styles.headerSub}>{user?.business_name || user?.businessName || user?.name || 'ব্যবসায়ী'}</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.langToggle}
-            onPress={() => setLang(lang === 'bn' ? 'en' : 'bn')}
-          >
-            <Text style={styles.langToggleText}>{lang === 'bn' ? 'EN' : 'বাং'}</Text>
-          </TouchableOpacity>
+          <View style={styles.headerRight}>
+            <TouchableOpacity
+              style={styles.themeToggle}
+              onPress={toggleTheme}
+            >
+              <Text style={styles.themeToggleText}>{isDark ? '☀️ দিন' : '🌙 রাত'}</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.langToggle}
+              onPress={() => setLang(lang === 'bn' ? 'en' : 'bn')}
+            >
+              <Text style={styles.langToggleText}>{lang === 'bn' ? 'EN' : 'বাং'}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -271,29 +283,31 @@ function MainApp() {
 export default function App() {
   return (
     <SafeAreaProvider>
-      <ErrorBoundary>
-        <MainApp />
-      </ErrorBoundary>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <MainApp />
+        </ErrorBoundary>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   splash: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoBadge: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    borderRadius: THEME.radius.lg,
+    borderRadius: theme.radius.lg,
   },
   logoBadgeText: {
     color: '#ffffff',
@@ -304,11 +318,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
-    paddingHorizontal: THEME.spacing.md,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceBorder,
+    borderBottomColor: theme.colors.surfaceBorder,
   },
   headerBrand: {
     flexDirection: 'row',
@@ -316,7 +330,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   headerLogo: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
@@ -329,33 +343,51 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 16,
     fontWeight: '800',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   headerSub: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  themeToggle: {
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
+    borderWidth: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  themeToggleText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: theme.colors.text,
   },
   langToggle: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   langToggleText: {
     fontSize: 11,
     fontWeight: '700',
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
   },
   mainContent: {
     flex: 1,
   },
   bottomNav: {
     flexDirection: 'row',
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
-    borderTopColor: THEME.colors.surfaceBorder,
+    borderTopColor: theme.colors.surfaceBorder,
     paddingVertical: 6,
     paddingBottom: 8,
   },
@@ -367,7 +399,7 @@ const styles = StyleSheet.create({
   },
   navTabActive: {
     borderTopWidth: 2,
-    borderTopColor: THEME.colors.primary,
+    borderTopColor: theme.colors.primary,
   },
   navIcon: {
     fontSize: 16,
@@ -375,11 +407,11 @@ const styles = StyleSheet.create({
   },
   navLabel: {
     fontSize: 10,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontWeight: '600',
   },
   navLabelActive: {
-    color: THEME.colors.primary,
+    color: theme.colors.primary,
     fontWeight: '700',
   },
 });

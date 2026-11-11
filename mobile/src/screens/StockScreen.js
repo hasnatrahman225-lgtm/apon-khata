@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,12 +10,14 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import { THEME } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { TRANSLATIONS } from '../constants/translations';
 import { apiRequest } from '../api/client';
 import { formatTk } from '../utils/formatters';
 
 export default function StockScreen({ lang = 'bn' }) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
 
   const [items, setItems] = useState([]);
@@ -43,13 +45,17 @@ export default function StockScreen({ lang = 'bn' }) {
     loadStock();
   }, []);
 
-  const handleAddStock = async () => {
+  const handleAddItem = async () => {
     if (!name.trim()) {
-      Alert.alert('সতর্কতা', 'পণ্যের নাম দিন');
+      Alert.alert('সতর্কতা', 'পণ্যের নাম লিখুন');
       return;
     }
     const q = parseFloat(quantity) || 0;
     const p = parseFloat(unitPrice) || 0;
+    if (q <= 0) {
+      Alert.alert('সতর্কতা', 'সঠিক পরিমাণ লিখুন');
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -57,9 +63,7 @@ export default function StockScreen({ lang = 'bn' }) {
         method: 'POST',
         body: JSON.stringify({
           name: name.trim(),
-          item_name: name.trim(),
           quantity: q,
-          unitPrice: p,
           unit_price: p,
         }),
       });
@@ -75,52 +79,55 @@ export default function StockScreen({ lang = 'bn' }) {
     }
   };
 
-  const safeItems = Array.isArray(items) ? items : [];
+  const renderItem = ({ item }) => {
+    const qty = Number(item.quantity || 0);
+    const unitP = Number(item.unit_price || 0);
+    const totalVal = qty * unitP;
+
+    return (
+      <View style={styles.itemCard}>
+        <View style={styles.itemLeft}>
+          <Text style={styles.itemName}>{item.name}</Text>
+          <Text style={styles.itemSub}>
+            দর: {formatTk(unitP)} / ইউনিট
+          </Text>
+        </View>
+        <View style={styles.itemRight}>
+          <View style={styles.qtyBadge}>
+            <Text style={styles.qtyText}>{qty} {item.unit || 'পিস'}</Text>
+          </View>
+          <Text style={styles.totalValue}>{formatTk(totalVal)}</Text>
+        </View>
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <Text style={styles.title}>{t.stock_title}</Text>
+        <Text style={styles.title}>{t.nav_stock}</Text>
         <TouchableOpacity
           style={styles.addBtn}
           onPress={() => setModalVisible(true)}
         >
-          <Text style={styles.addBtnText}>{t.add_product}</Text>
+          <Text style={styles.addBtnText}>+ পণ্য যোগ</Text>
         </TouchableOpacity>
       </View>
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={THEME.colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
-      ) : safeItems.length === 0 ? (
+      ) : items.length === 0 ? (
         <View style={styles.center}>
-          <Text style={styles.emptyText}>{t.no_stock}</Text>
+          <Text style={styles.emptyText}>কোনো স্টক পণ্য পাওয়া যায়নি</Text>
         </View>
       ) : (
         <FlatList
-          data={safeItems}
+          data={items}
           keyExtractor={(item) => String(item.id)}
+          renderItem={renderItem}
           contentContainerStyle={styles.list}
-          renderItem={({ item }) => {
-            const totalVal = (item.quantity || 0) * (item.unit_price || 0);
-            return (
-              <View style={styles.itemCard}>
-                <View style={styles.itemLeft}>
-                  <Text style={styles.itemName}>{item.name || item.item_name}</Text>
-                  <Text style={styles.itemSub}>
-                    একক মূল্য: {formatTk(item.unit_price)}
-                  </Text>
-                </View>
-                <View style={styles.itemRight}>
-                  <View style={styles.qtyBadge}>
-                    <Text style={styles.qtyText}>স্টক: {item.quantity}</Text>
-                  </View>
-                  <Text style={styles.totalValue}>{formatTk(totalVal)}</Text>
-                </View>
-              </View>
-            );
-          }}
         />
       )}
 
@@ -128,34 +135,34 @@ export default function StockScreen({ lang = 'bn' }) {
       <Modal visible={modalVisible} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>{t.add_product}</Text>
+            <Text style={styles.modalTitle}>নতুন স্টক পণ্য যোগ করুন</Text>
 
-            <Text style={styles.label}>{t.product_name} *</Text>
+            <Text style={styles.label}>পণ্যের নাম *</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="যেমন: চিনি, ডাল, সাবান"
-              placeholderTextColor={THEME.colors.textDim}
+              placeholder="পণ্যের নাম"
+              placeholderTextColor={theme.colors.textDim}
             />
 
-            <Text style={styles.label}>{t.quantity}</Text>
+            <Text style={styles.label}>পরিমাণ *</Text>
             <TextInput
               style={styles.input}
               value={quantity}
               onChangeText={setQuantity}
               placeholder="0"
-              placeholderTextColor={THEME.colors.textDim}
+              placeholderTextColor={theme.colors.textDim}
               keyboardType="numeric"
             />
 
-            <Text style={styles.label}>{t.unit_price}</Text>
+            <Text style={styles.label}>প্রতি ইউনিটের দর (৳)</Text>
             <TextInput
               style={styles.input}
               value={unitPrice}
               onChangeText={setUnitPrice}
               placeholder="0.00"
-              placeholderTextColor={THEME.colors.textDim}
+              placeholderTextColor={theme.colors.textDim}
               keyboardType="numeric"
             />
 
@@ -168,7 +175,7 @@ export default function StockScreen({ lang = 'bn' }) {
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.saveBtn]}
-                onPress={handleAddStock}
+                onPress={handleAddItem}
                 disabled={submitting}
               >
                 {submitting ? (
@@ -185,27 +192,27 @@ export default function StockScreen({ lang = 'bn' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceLight,
+    borderBottomColor: theme.colors.surfaceBorder,
   },
   title: {
     fontSize: 17,
     fontWeight: '800',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   addBtn: {
-    backgroundColor: THEME.colors.primary,
-    borderRadius: THEME.radius.md,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 14,
     paddingVertical: 8,
   },
@@ -215,13 +222,13 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   list: {
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
   },
   itemCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     padding: 12,
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -234,11 +241,11 @@ const styles = StyleSheet.create({
   itemName: {
     fontSize: 15,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   itemSub: {
     fontSize: 12,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginTop: 2,
   },
   itemRight: {
@@ -246,7 +253,7 @@ const styles = StyleSheet.create({
   },
   qtyBadge: {
     backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderColor: THEME.colors.accent,
+    borderColor: theme.colors.accent,
     borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 2,
@@ -256,12 +263,12 @@ const styles = StyleSheet.create({
   qtyText: {
     fontSize: 11,
     fontWeight: '700',
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
   },
   totalValue: {
     fontSize: 13,
     fontWeight: '700',
-    color: THEME.colors.primary,
+    color: theme.colors.primary,
   },
   center: {
     flex: 1,
@@ -270,7 +277,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontSize: 14,
   },
   modalOverlay: {
@@ -280,32 +287,32 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.xl,
+    borderRadius: theme.radius.xl,
     padding: 18,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
     marginBottom: 12,
   },
   label: {
     fontSize: 12,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginBottom: 4,
     marginTop: 8,
   },
   input: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 14,
   },
   modalBtnRow: {
@@ -317,18 +324,18 @@ const styles = StyleSheet.create({
   modalBtn: {
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
   },
   cancelBtn: {
-    backgroundColor: THEME.colors.surfaceLight,
+    backgroundColor: theme.colors.surfaceLight,
   },
   cancelBtnText: {
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     fontSize: 13,
   },
   saveBtn: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
   },
   saveBtnText: {
     color: '#ffffff',

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -10,12 +10,14 @@ import {
   ActivityIndicator,
   Alert
 } from 'react-native';
-import { THEME } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { TRANSLATIONS } from '../constants/translations';
 import { apiRequest } from '../api/client';
 import { formatTk } from '../utils/formatters';
 
 export default function ContactsScreen({ type = 'customer', onSelectContact, lang = 'bn' }) {
+  const { theme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
   const isCustomer = type === 'customer';
 
@@ -106,10 +108,10 @@ export default function ContactsScreen({ type = 'customer', onSelectContact, lan
             style={[
               styles.balanceAmount,
               isReceivable
-                ? { color: THEME.colors.primary }
+                ? { color: theme.colors.primary }
                 : isPayable
-                ? { color: THEME.colors.danger }
-                : { color: THEME.colors.textMuted },
+                ? { color: theme.colors.danger }
+                : { color: theme.colors.textMuted },
             ]}
           >
             {formatTk(bal)}
@@ -135,7 +137,7 @@ export default function ContactsScreen({ type = 'customer', onSelectContact, lan
           value={search}
           onChangeText={setSearch}
           placeholder={t.search_placeholder}
-          placeholderTextColor={THEME.colors.textDim}
+          placeholderTextColor={theme.colors.textDim}
         />
         <TouchableOpacity
           style={styles.addBtn}
@@ -148,7 +150,7 @@ export default function ContactsScreen({ type = 'customer', onSelectContact, lan
       {/* List */}
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={THEME.colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : filtered.length === 0 ? (
         <View style={styles.centerContainer}>
@@ -177,7 +179,7 @@ export default function ContactsScreen({ type = 'customer', onSelectContact, lan
               value={name}
               onChangeText={setName}
               placeholder="নাম লিখুন"
-              placeholderTextColor={THEME.colors.textDim}
+              placeholderTextColor={theme.colors.textDim}
             />
 
             <Text style={styles.label}>{t.phone}</Text>
@@ -186,7 +188,7 @@ export default function ContactsScreen({ type = 'customer', onSelectContact, lan
               value={phone}
               onChangeText={setPhone}
               placeholder="০১৭১১..."
-              placeholderTextColor={THEME.colors.textDim}
+              placeholderTextColor={theme.colors.textDim}
               keyboardType="phone-pad"
             />
 
@@ -216,32 +218,32 @@ export default function ContactsScreen({ type = 'customer', onSelectContact, lan
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   header: {
     flexDirection: 'row',
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     gap: 8,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceLight,
+    borderBottomColor: theme.colors.surfaceBorder,
   },
   searchInput: {
     flex: 1,
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 13,
   },
   addBtn: {
-    backgroundColor: THEME.colors.primary,
-    borderRadius: THEME.radius.md,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 16,
     justifyContent: 'center',
     alignItems: 'center',
@@ -252,14 +254,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   listContent: {
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     gap: 8,
   },
   contactCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.lg,
+    borderRadius: theme.radius.lg,
     padding: 12,
     flexDirection: 'row',
     alignItems: 'center',
@@ -269,9 +271,9 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: 21,
-    backgroundColor: THEME.colors.surfaceLight,
+    backgroundColor: theme.colors.surfaceLight,
     borderWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: theme.colors.surfaceBorder,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
@@ -279,7 +281,7 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: 18,
     fontWeight: '700',
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
   },
   contactInfo: {
     flex: 1,
@@ -287,11 +289,11 @@ const styles = StyleSheet.create({
   contactName: {
     fontSize: 15,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   contactPhone: {
     fontSize: 12,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginTop: 2,
   },
   balanceCol: {
@@ -303,7 +305,7 @@ const styles = StyleSheet.create({
   },
   balanceStatus: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginTop: 2,
   },
   centerContainer: {
@@ -313,7 +315,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontSize: 14,
   },
   modalOverlay: {
@@ -323,32 +325,32 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   modalCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.xl,
+    borderRadius: theme.radius.xl,
     padding: 18,
   },
   modalTitle: {
     fontSize: 17,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
     marginBottom: 12,
   },
   label: {
     fontSize: 12,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginBottom: 4,
     marginTop: 8,
   },
   input: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 12,
     paddingVertical: 9,
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 14,
   },
   modalBtnRow: {
@@ -360,18 +362,18 @@ const styles = StyleSheet.create({
   modalBtn: {
     paddingVertical: 10,
     paddingHorizontal: 18,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
   },
   cancelBtn: {
-    backgroundColor: THEME.colors.surfaceLight,
+    backgroundColor: theme.colors.surfaceLight,
   },
   cancelBtnText: {
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     fontSize: 13,
   },
   saveBtn: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
   },
   saveBtnText: {
     color: '#ffffff',

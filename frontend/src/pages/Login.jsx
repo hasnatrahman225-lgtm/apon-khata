@@ -2,6 +2,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useLanguage } from "../context/LanguageContext";
+import { useTheme } from "../context/ThemeContext";
 import LanguageModal from "../components/LanguageModal";
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
@@ -9,6 +10,7 @@ const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 export default function Login() {
   const { login, register, resetPassword, loginWithGoogle } = useAuth();
   const { t, currentLang, setCurrentLang, availableLanguages } = useLanguage();
+  const { toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
   const [mode, setMode] = useState("login"); // 'login' | 'register' | 'forgot'
   const [form, setForm] = useState({ email: "", password: "", name: "", businessName: "" });
@@ -84,6 +86,15 @@ export default function Login() {
             </div>
 
             <div className="header-actions">
+              <button
+                type="button"
+                className="btn-icon"
+                onClick={toggleTheme}
+                title={isDark ? "লাইট মোড (দিন)" : "ডার্ক মোড (রাত)"}
+                style={{ fontSize: "1.1rem" }}
+              >
+                {isDark ? "☀️" : "🌙"}
+              </button>
               <select
                 className="lang-select"
                 value={currentLang}

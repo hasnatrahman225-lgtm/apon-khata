@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,13 +12,15 @@ import {
   Linking,
   Share
 } from 'react-native';
-import { THEME } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { TRANSLATIONS } from '../constants/translations';
 import { apiRequest, getBaseUrl, getAuthToken, getAuthUser } from '../api/client';
 import { formatTk, formatDate } from '../utils/formatters';
 import { generateAndSharePdf } from '../utils/pdfGenerator';
 
 export default function ReportsScreen({ lang = 'bn' }) {
+  const { theme, isDark } = useTheme();
+  const styles = useMemo(() => getStyles(theme, isDark), [theme, isDark]);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
 
   const [filterPreset, setFilterPreset] = useState('all'); // 'all' | 'today' | 'yesterday' | '7days' | '30days' | 'month' | 'custom'
@@ -244,7 +246,7 @@ export default function ReportsScreen({ lang = 'bn' }) {
               value={customFrom}
               onChangeText={setCustomFrom}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={THEME.colors.textDim}
+              placeholderTextColor={theme.colors.textDim}
             />
           </View>
           <View style={styles.dateInputCol}>
@@ -254,7 +256,7 @@ export default function ReportsScreen({ lang = 'bn' }) {
               value={customTo}
               onChangeText={setCustomTo}
               placeholder="YYYY-MM-DD"
-              placeholderTextColor={THEME.colors.textDim}
+              placeholderTextColor={theme.colors.textDim}
             />
           </View>
           <TouchableOpacity style={styles.applyBtn} onPress={loadReports}>
@@ -315,19 +317,19 @@ export default function ReportsScreen({ lang = 'bn' }) {
       <View style={styles.summaryBar}>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>মোট দিলাম</Text>
-          <Text style={[styles.summaryVal, { color: THEME.colors.danger }]}>
+          <Text style={[styles.summaryVal, { color: theme.colors.danger }]}>
             {formatTk(totalGave)}
           </Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>মোট পেলাম</Text>
-          <Text style={[styles.summaryVal, { color: THEME.colors.primary }]}>
+          <Text style={[styles.summaryVal, { color: theme.colors.primary }]}>
             {formatTk(totalGot)}
           </Text>
         </View>
         <View style={styles.summaryItem}>
           <Text style={styles.summaryLabel}>মোট রেকর্ড</Text>
-          <Text style={[styles.summaryVal, { color: THEME.colors.accent }]}>
+          <Text style={[styles.summaryVal, { color: theme.colors.accent }]}>
             {safeTransactions.length} টি
           </Text>
         </View>
@@ -336,7 +338,7 @@ export default function ReportsScreen({ lang = 'bn' }) {
       {/* Table Rows: Compact Single-Line */}
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={THEME.colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : safeTransactions.length === 0 ? (
         <View style={styles.center}>
@@ -374,7 +376,7 @@ export default function ReportsScreen({ lang = 'bn' }) {
                   <Text
                     style={[
                       styles.rowAmount,
-                      { color: isGave ? THEME.colors.danger : THEME.colors.primary },
+                      { color: isGave ? theme.colors.danger : theme.colors.primary },
                     ]}
                   >
                     {isGave ? '-' : '+'} {formatTk(item.amount)}
@@ -389,23 +391,23 @@ export default function ReportsScreen({ lang = 'bn' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme, isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   topHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: THEME.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     paddingTop: 10,
     paddingBottom: 6,
   },
   title: {
     fontSize: 16,
     fontWeight: '800',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   topActions: {
     flexDirection: 'row',
@@ -423,39 +425,39 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   actionBtnCsv: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   actionBtnCsvText: {
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 11,
     fontWeight: '700',
   },
   actionBtnShare: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-    borderColor: THEME.colors.accent,
+    backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(79, 70, 229, 0.1)',
+    borderColor: theme.colors.accent,
     borderWidth: 1,
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   actionBtnShareText: {
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
     fontSize: 11,
     fontWeight: '700',
   },
   presetScroll: {
-    paddingHorizontal: THEME.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: 6,
     maxHeight: 44,
   },
   presetChip: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
     borderRadius: 16,
     paddingHorizontal: 12,
@@ -463,12 +465,12 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   presetChipActive: {
-    backgroundColor: THEME.colors.primary,
-    borderColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
+    borderColor: theme.colors.primary,
   },
   presetChipText: {
     fontSize: 12,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontWeight: '600',
   },
   presetChipActiveText: {
@@ -478,11 +480,11 @@ const styles = StyleSheet.create({
   customDateBox: {
     flexDirection: 'row',
     alignItems: 'flex-end',
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
     borderRadius: 8,
-    marginHorizontal: THEME.spacing.md,
+    marginHorizontal: theme.spacing.md,
     padding: 10,
     marginBottom: 6,
     gap: 8,
@@ -492,13 +494,13 @@ const styles = StyleSheet.create({
   },
   dateInputLabel: {
     fontSize: 10,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginBottom: 4,
   },
   dateInput: {
-    backgroundColor: THEME.colors.bg,
-    color: THEME.colors.text,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.bg,
+    color: theme.colors.text,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
     borderRadius: 6,
     paddingHorizontal: 8,
@@ -506,7 +508,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   applyBtn: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
     paddingHorizontal: 12,
     paddingVertical: 7,
     borderRadius: 6,
@@ -517,13 +519,13 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   contactScroll: {
-    paddingHorizontal: THEME.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: 6,
     maxHeight: 42,
   },
   contactChip: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
     borderRadius: 14,
     paddingHorizontal: 10,
@@ -531,15 +533,15 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   contactChipActive: {
-    borderColor: THEME.colors.accent,
+    borderColor: theme.colors.accent,
     backgroundColor: 'rgba(99, 102, 241, 0.2)',
   },
   contactChipText: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
   },
   contactChipActiveText: {
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
     fontWeight: '700',
   },
   activeContactBanner: {
@@ -548,7 +550,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderBottomWidth: 1,
     paddingVertical: 6,
-    paddingHorizontal: THEME.spacing.md,
+    paddingHorizontal: theme.spacing.md,
     alignItems: 'center',
   },
   activeContactText: {
@@ -558,12 +560,12 @@ const styles = StyleSheet.create({
   },
   summaryBar: {
     flexDirection: 'row',
-    backgroundColor: THEME.colors.surface,
+    backgroundColor: theme.colors.surface,
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: THEME.colors.surfaceBorder,
+    borderColor: theme.colors.surfaceBorder,
     paddingVertical: 8,
-    paddingHorizontal: THEME.spacing.md,
+    paddingHorizontal: theme.spacing.md,
   },
   summaryItem: {
     flex: 1,
@@ -571,7 +573,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: {
     fontSize: 10,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
   },
   summaryVal: {
     fontSize: 13,
@@ -579,29 +581,29 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   list: {
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     paddingTop: 6,
   },
   compactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceLight,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderBottomWidth: 1,
     paddingVertical: 8,
     paddingHorizontal: 8,
   },
   rowDateCol: {
-    width: 75,
+    width: 85,
   },
   rowDate: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     fontWeight: '600',
   },
   rowType: {
     fontSize: 9,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
   },
   rowNameCol: {
     flex: 1,
@@ -610,11 +612,11 @@ const styles = StyleSheet.create({
   rowName: {
     fontSize: 13,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   rowCategory: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
   },
   rowAmountCol: {
     alignItems: 'flex-end',
@@ -631,7 +633,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontSize: 13,
   },
 });

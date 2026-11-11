@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -15,13 +15,15 @@ import {
   Linking,
   Share
 } from 'react-native';
-import { THEME } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { TRANSLATIONS } from '../constants/translations';
 import { apiRequest, getBaseUrl, getAuthToken, getAuthUser } from '../api/client';
 import { formatTk, formatDate } from '../utils/formatters';
 import { generateAndSharePdf } from '../utils/pdfGenerator';
 
 export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
+  const { theme, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => getStyles(theme, isDark), [theme, isDark]);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
   const isCustomer = contact.type === 'customer';
 
@@ -206,21 +208,39 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
           <Text style={styles.topPhone}>{contactData.phone || t.phone_none}</Text>
         </View>
         <View style={styles.topBalance}>
-          <Text
-            style={[
-              styles.topBalanceAmount,
-              isReceivable
-                ? { color: THEME.colors.primary }
-                : isPayable
-                ? { color: THEME.colors.danger }
-                : { color: THEME.colors.textMuted },
-            ]}
-          >
-            {formatTk(bal)}
-          </Text>
-          <Text style={styles.topBalanceLabel}>
-            {isReceivable ? 'পাওনা' : isPayable ? 'জমা' : 'সমান'}
-          </Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <TouchableOpacity
+              style={{
+                backgroundColor: theme.colors.surfaceLight,
+                borderColor: theme.colors.surfaceBorder,
+                borderWidth: 1,
+                paddingHorizontal: 7,
+                paddingVertical: 3,
+                borderRadius: 6,
+              }}
+              onPress={toggleTheme}
+              title="থিম পরিবর্তন"
+            >
+              <Text style={{ fontSize: 13 }}>{isDark ? '☀️' : '🌙'}</Text>
+            </TouchableOpacity>
+            <View style={{ alignItems: 'flex-end' }}>
+              <Text
+                style={[
+                  styles.topBalanceAmount,
+                  isReceivable
+                    ? { color: theme.colors.primary }
+                    : isPayable
+                    ? { color: theme.colors.danger }
+                    : { color: theme.colors.textMuted },
+                ]}
+              >
+                {formatTk(bal)}
+              </Text>
+              <Text style={styles.topBalanceLabel}>
+                {isReceivable ? 'পাওনা' : isPayable ? 'জমা' : 'সমান'}
+              </Text>
+            </View>
+          </View>
         </View>
       </View>
 
@@ -248,7 +268,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
       {/* Action Buttons: দিলাম (লাল) vs পেলাম (সবুজ) */}
       <View style={styles.actionRow}>
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: THEME.colors.danger }]}
+          style={[styles.actionBtn, { backgroundColor: theme.colors.danger }]}
           onPress={() => openAddModal('gave')}
         >
           <Text style={styles.actionBtnIcon}>↑</Text>
@@ -258,7 +278,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.actionBtn, { backgroundColor: THEME.colors.primary }]}
+          style={[styles.actionBtn, { backgroundColor: theme.colors.primary }]}
           onPress={() => openAddModal('got')}
         >
           <Text style={styles.actionBtnIcon}>↓</Text>
@@ -271,7 +291,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
       {/* Transaction List */}
       {loading ? (
         <View style={styles.centerContainer}>
-          <ActivityIndicator size="large" color={THEME.colors.primary} />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
         </View>
       ) : (Array.isArray(transactions) ? transactions : []).length === 0 ? (
         <View style={styles.centerContainer}>
@@ -295,8 +315,8 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                           styles.badge,
                           {
                             backgroundColor: isGave
-                              ? 'rgba(244, 63, 94, 0.15)'
-                              : 'rgba(16, 185, 129, 0.15)',
+                              ? (isDark ? 'rgba(244, 63, 94, 0.15)' : 'rgba(225, 29, 72, 0.1)')
+                              : (isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 150, 105, 0.1)'),
                           },
                         ]}
                       >
@@ -305,8 +325,8 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                             styles.badgeText,
                             {
                               color: isGave
-                                ? THEME.colors.danger
-                                : THEME.colors.primary,
+                                ? theme.colors.danger
+                                : theme.colors.primary,
                             },
                           ]}
                         >
@@ -326,8 +346,8 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                         styles.txAmount,
                         {
                           color: isGave
-                            ? THEME.colors.danger
-                            : THEME.colors.primary,
+                            ? theme.colors.danger
+                            : theme.colors.primary,
                         },
                       ]}
                     >
@@ -423,7 +443,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                 value={amount}
                 onChangeText={setAmount}
                 placeholder="0.00"
-                placeholderTextColor={THEME.colors.textDim}
+                placeholderTextColor={theme.colors.textDim}
                 keyboardType="numeric"
               />
 
@@ -434,7 +454,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                 value={date}
                 onChangeText={setDate}
                 placeholder="2026-09-05"
-                placeholderTextColor={THEME.colors.textDim}
+                placeholderTextColor={theme.colors.textDim}
               />
 
               {/* Category */}
@@ -444,7 +464,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                 value={category}
                 onChangeText={setCategory}
                 placeholder="যেমন: পণ্য বিক্রয়, পরিবহন"
-                placeholderTextColor={THEME.colors.textDim}
+                placeholderTextColor={theme.colors.textDim}
               />
               <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetRow}>
                 {CATEGORY_PRESETS.map((cat) => (
@@ -465,7 +485,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
                 value={note}
                 onChangeText={setNote}
                 placeholder="অতিরিক্ত কোনো তথ্য থাকলে লিখুন"
-                placeholderTextColor={THEME.colors.textDim}
+                placeholderTextColor={theme.colors.textDim}
                 multiline
               />
 
@@ -497,25 +517,25 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme, isDark) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: THEME.spacing.md,
-    backgroundColor: THEME.colors.surface,
+    padding: theme.spacing.md,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceLight,
+    borderBottomColor: theme.colors.surfaceBorder,
   },
   backBtn: {
     paddingRight: 10,
   },
   backBtnText: {
     fontSize: 16,
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
     fontWeight: '700',
   },
   topInfo: {
@@ -524,11 +544,11 @@ const styles = StyleSheet.create({
   topName: {
     fontSize: 16,
     fontWeight: '800',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   topPhone: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
   },
   topBalance: {
     alignItems: 'flex-end',
@@ -539,11 +559,11 @@ const styles = StyleSheet.create({
   },
   topBalanceLabel: {
     fontSize: 10,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
   },
   actionRow: {
     flexDirection: 'row',
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     gap: 10,
   },
   actionBtn: {
@@ -552,7 +572,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 12,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     gap: 6,
   },
   actionBtnIcon: {
@@ -566,14 +586,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   txList: {
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     gap: 8,
   },
   txCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     padding: 12,
     marginBottom: 8,
   },
@@ -604,17 +624,19 @@ const styles = StyleSheet.create({
   },
   txDate: {
     fontSize: 12,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
+    minWidth: 85,
     flexShrink: 0,
+    flexWrap: 'wrap',
   },
   txCategory: {
     fontSize: 13,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   txNote: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginTop: 2,
     fontStyle: 'italic',
   },
@@ -632,18 +654,18 @@ const styles = StyleSheet.create({
     marginTop: 8,
     paddingTop: 6,
     borderTopWidth: 1,
-    borderTopColor: THEME.colors.surfaceLight,
+    borderTopColor: theme.colors.surfaceBorder,
   },
   txBtn: {
     paddingVertical: 2,
   },
   txBtnEdit: {
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
     fontSize: 12,
     fontWeight: '600',
   },
   txBtnDelete: {
-    color: THEME.colors.danger,
+    color: theme.colors.danger,
     fontSize: 12,
     fontWeight: '600',
   },
@@ -654,7 +676,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   emptyText: {
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontSize: 13,
     textAlign: 'center',
   },
@@ -665,10 +687,10 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   modalCard: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.xl,
+    borderRadius: theme.radius.xl,
     padding: 18,
     maxHeight: '85%',
   },
@@ -681,17 +703,17 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   closeBtn: {
     fontSize: 18,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     padding: 4,
   },
   dirSwitchRow: {
     flexDirection: 'row',
-    backgroundColor: THEME.colors.surfaceLight,
-    borderRadius: THEME.radius.md,
+    backgroundColor: theme.colors.surfaceLight,
+    borderRadius: theme.radius.md,
     padding: 3,
     marginBottom: 12,
   },
@@ -699,18 +721,18 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 8,
     alignItems: 'center',
-    borderRadius: THEME.radius.sm,
+    borderRadius: theme.radius.sm,
   },
   dirSwitchActiveGave: {
-    backgroundColor: THEME.colors.danger,
+    backgroundColor: theme.colors.danger,
   },
   dirSwitchActiveGot: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
   },
   dirSwitchText: {
     fontSize: 12,
     fontWeight: '600',
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
   },
   dirSwitchActiveText: {
     color: '#ffffff',
@@ -718,32 +740,32 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 12,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginBottom: 4,
     marginTop: 8,
   },
   input: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 14,
   },
   amountInput: {
     fontSize: 20,
     fontWeight: '800',
-    color: THEME.colors.primary,
+    color: theme.colors.primary,
   },
   presetRow: {
     flexDirection: 'row',
     marginVertical: 6,
   },
   presetChip: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
     borderRadius: 12,
     paddingHorizontal: 10,
@@ -752,7 +774,7 @@ const styles = StyleSheet.create({
   },
   presetChipText: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
   },
   modalBtnRow: {
     flexDirection: 'row',
@@ -763,18 +785,18 @@ const styles = StyleSheet.create({
   modalBtn: {
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     alignItems: 'center',
   },
   cancelBtn: {
-    backgroundColor: THEME.colors.surfaceLight,
+    backgroundColor: theme.colors.surfaceLight,
   },
   cancelBtnText: {
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     fontSize: 13,
   },
   saveBtn: {
-    backgroundColor: THEME.colors.primary,
+    backgroundColor: theme.colors.primary,
   },
   saveBtnText: {
     color: '#ffffff',
@@ -785,15 +807,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: THEME.colors.surface,
-    paddingHorizontal: THEME.spacing.md,
+    backgroundColor: theme.colors.surface,
+    paddingHorizontal: theme.spacing.md,
     paddingVertical: 8,
     borderBottomWidth: 1,
-    borderBottomColor: THEME.colors.surfaceBorder,
+    borderBottomColor: theme.colors.surfaceBorder,
   },
   statementBarTitle: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     fontWeight: '600',
   },
   statementBtns: {
@@ -812,15 +834,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   btnShareSmall: {
-    backgroundColor: 'rgba(99, 102, 241, 0.2)',
-    borderColor: THEME.colors.accent,
+    backgroundColor: isDark ? 'rgba(99, 102, 241, 0.2)' : 'rgba(79, 70, 229, 0.1)',
+    borderColor: theme.colors.accent,
     borderWidth: 1,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 6,
   },
   btnShareSmallText: {
-    color: THEME.colors.accent,
+    color: theme.colors.accent,
     fontSize: 11,
     fontWeight: 'bold',
   },

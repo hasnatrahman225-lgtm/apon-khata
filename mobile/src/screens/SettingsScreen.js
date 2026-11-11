@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,11 +8,13 @@ import {
   ScrollView,
   Alert
 } from 'react-native';
-import { THEME } from '../constants/theme';
+import { useTheme } from '../context/ThemeContext';
 import { TRANSLATIONS } from '../constants/translations';
 import { getBaseUrl, setBaseUrl, apiRequest } from '../api/client';
 
 export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguageChange }) {
+  const { theme, isDark, toggleTheme } = useTheme();
+  const styles = useMemo(() => getStyles(theme), [theme]);
   const t = TRANSLATIONS[lang] || TRANSLATIONS.bn;
 
   const [serverUrl, setServerUrl] = useState('');
@@ -76,6 +78,35 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
         ) : null}
       </View>
 
+      {/* Theme Mode Switch */}
+      <View style={styles.card}>
+        <Text style={styles.cardHeader}>🎨 থিম মোড (Day / Night Mode)</Text>
+        <View style={styles.langRow}>
+          <TouchableOpacity
+            style={[
+              styles.langBtn,
+              !isDark && styles.langBtnActive,
+            ]}
+            onPress={() => { if (isDark) toggleTheme(); }}
+          >
+            <Text style={[styles.langBtnText, !isDark && styles.langBtnTextActive]}>
+              ☀️ দিন (Day Mode)
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.langBtn,
+              isDark && styles.langBtnActive,
+            ]}
+            onPress={() => { if (!isDark) toggleTheme(); }}
+          >
+            <Text style={[styles.langBtnText, isDark && styles.langBtnTextActive]}>
+              🌙 রাত (Night Mode)
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       {/* Language Switch */}
       <View style={styles.card}>
         <Text style={styles.cardHeader}>🌐 {t.language}</Text>
@@ -115,7 +146,7 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
           value={currentPassword}
           onChangeText={setCurrentPassword}
           placeholder="••••••"
-          placeholderTextColor={THEME.colors.textDim}
+          placeholderTextColor={theme.colors.textDim}
           secureTextEntry
         />
 
@@ -125,7 +156,7 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
           value={newPassword}
           onChangeText={setNewPassword}
           placeholder="••••••"
-          placeholderTextColor={THEME.colors.textDim}
+          placeholderTextColor={theme.colors.textDim}
           secureTextEntry
         />
 
@@ -135,7 +166,7 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
           value={confirmPassword}
           onChangeText={setConfirmPassword}
           placeholder="••••••"
-          placeholderTextColor={THEME.colors.textDim}
+          placeholderTextColor={theme.colors.textDim}
           secureTextEntry
         />
 
@@ -152,9 +183,9 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
       <View style={styles.card}>
         <Text style={styles.cardHeader}>☁️ ক্লাউড ডাটাবেস স্ট্যাটাস</Text>
         <Text style={styles.helperText}>আপনার অ্যাপটি সরাসরি Google Firebase Cloud ডাটাবেসের সাথে যুক্ত। কোনো ব্যক্তিগত কম্পিউটার চালু রাখা ছাড়াই সার্বক্ষণিক ২৪/৭ নিরাপদে সিঙ্ক থাকবে।</Text>
-        <View style={{ marginTop: 10, padding: 12, backgroundColor: '#132f22', borderRadius: 8, borderWidth: 1, borderColor: '#059669' }}>
-          <Text style={{ color: '#34d399', fontWeight: 'bold' }}>🟢 স্ট্যাটাস: সক্রিয় (Google Firebase)</Text>
-          <Text style={{ color: '#9ca3af', fontSize: 12, marginTop: 4 }}>প্রজেক্ট: apan-khata</Text>
+        <View style={{ marginTop: 10, padding: 12, backgroundColor: isDark ? '#132f22' : '#dcfce7', borderRadius: 8, borderWidth: 1, borderColor: '#059669' }}>
+          <Text style={{ color: '#059669', fontWeight: 'bold' }}>🟢 স্ট্যাটাস: সক্রিয় (Google Firebase Cloud)</Text>
+          <Text style={{ color: theme.colors.textMuted, fontSize: 12, marginTop: 4 }}>প্রজেক্ট: apan-khata</Text>
         </View>
       </View>
 
@@ -166,48 +197,48 @@ export default function SettingsScreen({ user, onLogout, lang = 'bn', onLanguage
   );
 }
 
-const styles = StyleSheet.create({
+const getStyles = (theme) => StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: THEME.colors.bg,
+    backgroundColor: theme.colors.bg,
   },
   content: {
-    padding: THEME.spacing.md,
+    padding: theme.spacing.md,
     paddingBottom: 40,
   },
   screenTitle: {
     fontSize: 18,
     fontWeight: '800',
-    color: THEME.colors.text,
+    color: theme.colors.text,
     marginBottom: 12,
   },
   card: {
-    backgroundColor: THEME.colors.surface,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surface,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.lg,
+    borderRadius: theme.radius.lg,
     padding: 14,
     marginBottom: 12,
   },
   cardHeader: {
     fontSize: 14,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
     marginBottom: 8,
   },
   userName: {
     fontSize: 16,
     fontWeight: '700',
-    color: THEME.colors.text,
+    color: theme.colors.text,
   },
   userSub: {
     fontSize: 12,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     marginTop: 2,
   },
   userBusiness: {
     fontSize: 13,
-    color: THEME.colors.primary,
+    color: theme.colors.primary,
     fontWeight: '600',
     marginTop: 6,
   },
@@ -218,50 +249,50 @@ const styles = StyleSheet.create({
   },
   langBtn: {
     flex: 1,
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingVertical: 10,
     alignItems: 'center',
   },
   langBtnActive: {
-    borderColor: THEME.colors.primary,
+    borderColor: theme.colors.primary,
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   langBtnText: {
     fontSize: 13,
     fontWeight: '600',
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
   },
   langBtnTextActive: {
-    color: THEME.colors.primary,
+    color: theme.colors.primary,
     fontWeight: '700',
   },
   label: {
     fontSize: 11,
-    color: THEME.colors.textMuted,
+    color: theme.colors.textMuted,
     marginTop: 8,
     marginBottom: 4,
   },
   input: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 13,
   },
   helperText: {
     fontSize: 11,
-    color: THEME.colors.textDim,
+    color: theme.colors.textDim,
     lineHeight: 16,
   },
   btnPrimary: {
-    backgroundColor: THEME.colors.primary,
-    borderRadius: THEME.radius.md,
+    backgroundColor: theme.colors.primary,
+    borderRadius: theme.radius.md,
     paddingVertical: 10,
     alignItems: 'center',
     marginTop: 12,
@@ -272,30 +303,30 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   btnSecondary: {
-    backgroundColor: THEME.colors.surfaceLight,
-    borderColor: THEME.colors.surfaceBorder,
+    backgroundColor: theme.colors.surfaceLight,
+    borderColor: theme.colors.surfaceBorder,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingVertical: 10,
     alignItems: 'center',
     marginTop: 10,
   },
   btnSecondaryText: {
-    color: THEME.colors.text,
+    color: theme.colors.text,
     fontSize: 13,
     fontWeight: '600',
   },
   logoutBtn: {
     backgroundColor: 'rgba(244, 63, 94, 0.15)',
-    borderColor: THEME.colors.danger,
+    borderColor: theme.colors.danger,
     borderWidth: 1,
-    borderRadius: THEME.radius.md,
+    borderRadius: theme.radius.md,
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 8,
   },
   logoutBtnText: {
-    color: THEME.colors.danger,
+    color: theme.colors.danger,
     fontSize: 14,
     fontWeight: '700',
   },

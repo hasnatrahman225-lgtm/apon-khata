@@ -1,6 +1,7 @@
 import { Navigate, Route, BrowserRouter as Router, Routes } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { LanguageProvider, useLanguage } from "./context/LanguageContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Contacts from "./pages/Contacts";
@@ -33,8 +34,9 @@ function RedirectIfAuthed({ children }) {
 
 export default function App() {
   return (
-    <LanguageProvider>
-      <AuthProvider>
+    <ThemeProvider>
+      <LanguageProvider>
+        <AuthProvider>
       <Router>
         <Routes>
           <Route
@@ -96,7 +98,8 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
-    </AuthProvider>
-    </LanguageProvider>
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
   );
 }

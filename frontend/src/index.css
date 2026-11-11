@@ -41,6 +41,93 @@
   color-scheme: dark;
 }
 
+[data-theme="light"] {
+  /* Day / Light Corporate Palette */
+  --bg-dark: #f1f5f9;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8fafc;
+  --bg-input: #f8fafc;
+  
+  /* Borders & Dividers */
+  --border-subtle: #e2e8f0;
+  --border-focus: #4f46e5;
+  --border-light: #cbd5e1;
+
+  /* Vibrant Accent Colors */
+  --accent-primary: #4f46e5;
+  --accent-primary-hover: #4338ca;
+  --accent-cyan: #0284c7;
+  --accent-violet: #7c3aed;
+  
+  /* Financial Directional Colors */
+  --credit-green: #059669;
+  --credit-glow: rgba(5, 150, 105, 0.15);
+  --debit-red: #e11d48;
+  --debit-glow: rgba(225, 29, 72, 0.15);
+  --amber-warning: #d97706;
+
+  /* Typography */
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-glow: 0 0 15px rgba(99, 102, 241, 0.1);
+
+  color-scheme: light;
+}
+
+[data-theme="light"] body {
+  background-color: #f1f5f9;
+  background-image: 
+    radial-gradient(circle at 10% 10%, rgba(99, 102, 241, 0.05) 0%, transparent 40%),
+    radial-gradient(circle at 90% 85%, rgba(6, 182, 212, 0.05) 0%, transparent 40%),
+    linear-gradient(180deg, #f8fafc 0%, #edf2f7 100%);
+  color: #0f172a;
+}
+
+[data-theme="light"] .ledger-page {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="light"] .stat-card,
+[data-theme="light"] .entry-card,
+[data-theme="light"] .row-item,
+[data-theme="light"] .modal-card,
+[data-theme="light"] .report-card,
+[data-theme="light"] .report-filter-bar,
+[data-theme="light"] .report-printable-area {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+}
+
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .btn-ghost {
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+[data-theme="light"] .tab-row a {
+  color: #64748b;
+}
+
+[data-theme="light"] .tab-row a.active {
+  color: #4f46e5;
+  border-bottom-color: #4f46e5;
+  background: rgba(99, 102, 241, 0.08);
+}
+
 * {
   box-sizing: border-box;
 }
