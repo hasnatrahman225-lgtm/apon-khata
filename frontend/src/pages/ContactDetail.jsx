@@ -9,6 +9,18 @@ function fmt(n) {
   return `৳${Number(n || 0).toLocaleString("en-BD", { maximumFractionDigits: 2 })}`;
 }
 
+function safeFormatDate(str) {
+  if (!str) return "";
+  try {
+    const safeStr = String(str).includes("T") ? str : String(str).replace(" ", "T");
+    const d = new Date(safeStr);
+    if (isNaN(d.getTime())) return String(str);
+    return `📅 ${d.toLocaleDateString("bn-BD")} · 🕒 ${d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" })}`;
+  } catch (e) {
+    return String(str);
+  }
+}
+
 export default function ContactDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -219,7 +231,7 @@ export default function ContactDetail() {
                 </span>
               </div>
               <div className="row-sub">
-                📅 {new Date(tRow.occurred_at).toLocaleDateString("bn-BD")} · 🕒 {new Date(tRow.occurred_at).toLocaleTimeString("bn-BD", { hour: '2-digit', minute: '2-digit' })}
+                {safeFormatDate(tRow.occurred_at || tRow.created_at)}
               </div>
             </div>
 

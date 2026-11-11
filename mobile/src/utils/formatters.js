@@ -16,7 +16,18 @@ export function formatTk(amount) {
 export function formatDate(isoString) {
   if (!isoString) return '';
   try {
-    return String(isoString).split('T')[0];
+    const raw = String(isoString).trim();
+    // Extract date portion whether space or T separated
+    const datePart = raw.split('T')[0].split(' ')[0];
+    const parts = datePart.split('-');
+    if (parts.length === 3) {
+      // YYYY-MM-DD -> DD-MM-YYYY
+      const y = parts[0];
+      const m = parts[1];
+      const d = parts[2];
+      return `${d}/${m}/${y}`;
+    }
+    return datePart;
   } catch (e) {
     return String(isoString);
   }

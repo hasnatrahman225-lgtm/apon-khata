@@ -228,8 +228,16 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
       <View style={styles.statementBar}>
         <Text style={styles.statementBarTitle}>ব্যক্তিগত স্টেটমেন্ট:</Text>
         <View style={styles.statementBtns}>
-          <TouchableOpacity style={styles.btnPdfSmall} onPress={handleDownloadReport}>
-            <Text style={styles.btnPdfSmallText}>📄 PDF রিপোর্ট</Text>
+          <TouchableOpacity
+            style={styles.btnPdfSmall}
+            onPress={handleDownloadReport}
+            disabled={generatingPdf}
+          >
+            {generatingPdf ? (
+              <ActivityIndicator size="small" color="#ffffff" />
+            ) : (
+              <Text style={styles.btnPdfSmallText}>📄 PDF রিপোর্ট</Text>
+            )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.btnShareSmall} onPress={handleShareReport}>
             <Text style={styles.btnShareSmallText}>📤 শেয়ার</Text>
@@ -276,7 +284,7 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
           contentContainerStyle={styles.txList}
           renderItem={({ item }) => {
             const isGave = item.direction === 'gave';
-            const dateStr = item.occurred_at ? item.occurred_at.split('T')[0] : '';
+            const dateStr = formatDate(item.occurred_at || item.created_at);
             return (
               <View style={styles.txCard}>
                 <View style={styles.txMain}>
@@ -353,7 +361,8 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
       <Modal visible={modalVisible} transparent animationType="slide">
         <KeyboardAvoidingView
           style={styles.modalOverlay}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
         >
           <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
@@ -365,7 +374,11 @@ export default function ContactDetailScreen({ contact, onBack, lang = 'bn' }) {
               </TouchableOpacity>
             </View>
 
-            <ScrollView keyboardShouldPersistTaps="handled">
+            <ScrollView
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingBottom: 60 }}
+            >
               {/* Direction selector */}
               <View style={styles.dirSwitchRow}>
                 <TouchableOpacity
@@ -571,12 +584,14 @@ const styles = StyleSheet.create({
   },
   txLeft: {
     flex: 1,
+    marginRight: 8,
   },
   txBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
     marginBottom: 4,
+    flexWrap: 'wrap',
   },
   badge: {
     paddingHorizontal: 6,
@@ -588,8 +603,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   txDate: {
-    fontSize: 11,
+    fontSize: 12,
     color: THEME.colors.textDim,
+    flexShrink: 0,
   },
   txCategory: {
     fontSize: 13,
@@ -654,7 +670,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: THEME.radius.xl,
     padding: 18,
-    maxHeight: '90%',
+    maxHeight: '85%',
   },
   modalHeader: {
     flexDirection: 'row',

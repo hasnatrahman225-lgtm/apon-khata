@@ -15,7 +15,7 @@ import {
 import { THEME } from '../constants/theme';
 import { TRANSLATIONS } from '../constants/translations';
 import { apiRequest, getBaseUrl, getAuthToken, getAuthUser } from '../api/client';
-import { formatTk } from '../utils/formatters';
+import { formatTk, formatDate } from '../utils/formatters';
 import { generateAndSharePdf } from '../utils/pdfGenerator';
 
 export default function ReportsScreen({ lang = 'bn' }) {
@@ -349,7 +349,7 @@ export default function ReportsScreen({ lang = 'bn' }) {
           contentContainerStyle={styles.list}
           renderItem={({ item }) => {
             const isGave = item.direction === 'gave';
-            const dateStr = item.occurred_at ? item.occurred_at.split('T')[0] : '';
+            const dateStr = formatDate(item.occurred_at || item.created_at);
             return (
               <View style={styles.compactRow}>
                 <View style={styles.rowDateCol}>

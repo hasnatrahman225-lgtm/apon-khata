@@ -8,6 +8,18 @@ function fmt(n) {
   return `৳${Number(n || 0).toLocaleString("en-BD", { maximumFractionDigits: 2 })}`;
 }
 
+function safeFormatDate(str) {
+  if (!str) return "";
+  try {
+    const safeStr = String(str).includes("T") ? str : String(str).replace(" ", "T");
+    const d = new Date(safeStr);
+    if (isNaN(d.getTime())) return String(str);
+    return `📅 ${d.toLocaleDateString("bn-BD")} · 🕒 ${d.toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" })}`;
+  } catch (e) {
+    return String(str);
+  }
+}
+
 export default function Dashboard() {
   const { t, getCategoryLabel } = useLanguage();
   const [summary, setSummary] = useState(null);
@@ -71,7 +83,7 @@ export default function Dashboard() {
                   </div>
                   <div className="row-sub">
                     {tx.note && <span style={{ marginRight: 6 }}>{tx.note} · </span>}
-                    📅 {new Date(tx.occurred_at).toLocaleDateString("bn-BD")} · 🕒 {new Date(tx.occurred_at).toLocaleTimeString("bn-BD", { hour: "2-digit", minute: "2-digit" })}
+                    {safeFormatDate(tx.occurred_at || tx.created_at)}
                   </div>
                 </div>
 
